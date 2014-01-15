@@ -410,7 +410,7 @@ package com.demonsters.debugger
 			if (maxDepth != -1 && currentDepth > maxDepth) {
 				return rootXML;
 			}
-			
+
 			// Null object
 			if (object == null)
 			{
@@ -486,8 +486,61 @@ package com.demonsters.debugger
 			// Return the xml
 			return rootXML;
 		}
-		
-		
+
+		private static function addRecursiveProperties(displayObject : DisplayObject, xml : XML) : void {
+			addField("~x", getRecursiveProperty(displayObject, "x"), xml);
+			addField("~y", getRecursiveProperty(displayObject, "y"), xml);
+			addField("~scaleX", getRecursiveProperty(displayObject, "scaleX"), xml);
+			addField("~scaleY", getRecursiveProperty(displayObject, "scaleY"), xml);
+			addField("~alpha", getRecursiveProperty(displayObject, "alpha"), xml);
+			addField("~visible", getRecursiveProperty(displayObject, "visible"), xml);
+			addField("~cacheAsBitmap", getRecursiveProperty(displayObject, "cacheAsBitmap"), xml);
+			addField("~smoothing", getDownProperties(displayObject, "smoothing"), xml);
+		}
+
+		private static function getRecursiveProperty(displayObject : DisplayObject, key : String) : Array {
+			var collection : Array = displayObject is Stage ? [] : getRecursiveProperty(displayObject.parent, key);
+			collection.unshift(getPropertySafe(displayObject, key, "?"));
+			return collection;
+		}
+
+		private static function getDownProperties(displayObject : DisplayObject, key : String, collection : Array = null) : Array {
+			collection ||= [];
+			var value:* = getPropertySafe(displayObject, key);
+			if (value != null) {
+				collection.push(displayObject[key]);
+			}
+			if (displayObject is DisplayObjectContainer) {
+				var container : DisplayObjectContainer = DisplayObjectContainer(displayObject);
+				for (var i : uint = 0; i < container.numChildren; i++) {
+					getDownProperties(container.getChildAt(i), key, collection);
+				}
+			}
+			return collection;
+		}
+
+		private static function addField(name : String, value : *, xml : XML) : void {
+			var childType : String = MonsterDebuggerConstants.TYPE_STRING;
+			var childXML : XML = new XML("<node/>");
+			childXML.@icon = MonsterDebuggerConstants.ICON_DEFAULT;
+			childXML.@access = MonsterDebuggerConstants.ACCESS_VARIABLE;
+			childXML.@permission = MonsterDebuggerConstants.PERMISSION_READONLY;
+			childXML.@label = name + " (" + childType + ") = " + printValue(value, childType, true);
+			childXML.@name = name;
+			childXML.@type = childType;
+			childXML.@value = printValue(value, childType);
+			childXML.@target = "";
+			xml.appendChild(childXML);
+		}
+
+		private static function getPropertySafe(displayObject : DisplayObject, key : String, defaultValue:* = null) : * {
+			try{
+				return displayObject[key];
+			}catch (e:*){
+				return defaultValue;
+			}
+		}
+
 		/**
 		 * Parse a String, Number, Boolean, ect.
 		 * @param object: The object to parse
@@ -802,7 +855,7 @@ package com.demonsters.debugger
 			} else {
 				properties.sort(Array.CASEINSENSITIVE);
 			}
-			
+
 			// Loop through the array
 			for (i = 0; i < properties.length; i++)
 			{
@@ -853,7 +906,7 @@ package com.demonsters.debugger
 				
 			// Add to parent
 			rootXML.appendChild(nodeXML.children());
-				
+
 			// Return
 			return rootXML;
 		}
@@ -1038,7 +1091,11 @@ package com.demonsters.debugger
 				displayObjects.sortOn("name", Array.CASEINSENSITIVE);
 				itemsArray = displayObjects.concat(itemsArray);
 			}
-			
+
+			if(object is DisplayObject){
+				addRecursiveProperties(DisplayObject(object), rootXML);
+			}
+
 			// Save length
 			itemsArrayLength = itemsArray.length;
 
