@@ -1,12 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="Flex" version="4">
-  <component name="FlexBuildConfigurationManager" active="client">
+  <component name="FlexBuildConfigurationManager" active="client_desktop_pure">
     <configurations>
-      <configuration name="client" pure-as="true" output-type="Library" output-file="client.swc" output-folder="$MODULE_DIR$/../out/production/client">
+      <configuration name="client_desktop_pure" pure-as="true" output-type="Library" output-file="client_desktop_pure.swc" output-folder="$MODULE_DIR$/../out/production/client">
         <dependencies target-player="11.9">
           <sdk name="apache-flex-4_11_0-3_9-11_9" />
         </dependencies>
-        <compiler-options />
+        <compiler-options>
+          <option name="additionalOptions" value="-define+=CONFIG::Default,true -define+=CONFIG::Mobile,false -define+=CONFIG::PureAS,true -define+=CONFIG::Flex,false" />
+        </compiler-options>
+        <packaging-air-desktop />
+        <packaging-android />
+        <packaging-ios />
+      </configuration>
+      <configuration name="client_desktop_flex" output-type="Library" output-file="client_desktop_flex.swc" output-folder="$MODULE_DIR$/../out/production/client">
+        <dependencies target-player="11.9">
+          <sdk name="apache-flex-4_11_0-3_9-11_9" />
+        </dependencies>
+        <compiler-options>
+          <option name="additionalOptions" value="-define+=CONFIG::Default,true -define+=CONFIG::Mobile,false -define+=CONFIG::PureAS,false -define+=CONFIG::Flex,true" />
+        </compiler-options>
+        <packaging-air-desktop />
+        <packaging-android />
+        <packaging-ios />
+      </configuration>
+      <configuration name="client_mobile_pure" pure-as="true" output-type="Library" output-file="client_mobile_pure.swc" output-folder="$MODULE_DIR$/../out/production/client">
+        <dependencies target-player="11.9">
+          <sdk name="apache-flex-4_11_0-3_9-11_9" />
+        </dependencies>
+        <compiler-options>
+          <option name="additionalOptions" value="-define+=CONFIG::Default,false -define+=CONFIG::Mobile,true -define+=CONFIG::PureAS,true -define+=CONFIG::Flex,false" />
+        </compiler-options>
         <packaging-air-desktop />
         <packaging-android />
         <packaging-ios />
