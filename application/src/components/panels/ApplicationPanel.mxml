@@ -107,6 +107,7 @@
 			<s:Label text="filter: " height="8"/>
 			<components:Filter id="filter"/>
 			<mx:Spacer width="100%"/>
+                        <s:Button id="gotoParent" label="Parent"/>			
 			<s:CheckBox id="inspectCheckbox" label="Highlight &amp; Inspect" height="20" width="110" skinClass="skins.CheckBoxSkin"/>
 		</s:SkinnableContainer>
 	</s:Group>

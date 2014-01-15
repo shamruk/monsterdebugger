@@ -4,6 +4,9 @@ package controllers.panels
 	import components.panels.ApplicationPanel;
 	import events.PanelEvent;
 	import com.demonsters.debugger.MonsterDebuggerConstants;
+
+	import flash.utils.setTimeout;
+
 	import mx.collections.XMLListCollection;
 	import mx.events.FlexEvent;
 	import mx.events.ListEvent;
@@ -25,6 +28,7 @@ package controllers.panels
 		private var _panel:ApplicationPanel;
 		private var _send:Function;
 		private var _selectedTarget:String;
+		private var onObjectGotten:Function;
 
 
 		/**
@@ -61,8 +65,30 @@ package controllers.panels
 			_panel.tree.addEventListener(TreeEvent.ITEM_OPEN, treeOpen, false, 0, true);
 			_panel.tree.addEventListener(MouseEvent.CLICK, treeClick, false, 0, true);
 			_panel.tree.addEventListener(ListEvent.ITEM_ROLL_OVER, onShowInspect, false, 0, true);
+			_panel.gotoParent.addEventListener(MouseEvent.CLICK, gotoParent, false, 0, true);
 			_panel.filter.addEventListener(Filter.CHANGED, filterChanged, false, 0, true);
 			_panel.inspectCheckbox.addEventListener(MouseEvent.CLICK, onInspectClicked, false, 0, true);
+		}
+
+		private function gotoParent(event:MouseEvent):void {
+			var current:Object;
+			if( !_panel.tree.selectedItem){
+				_panel.tree.selectedIndex = 0;
+			}
+			current = _panel.tree.selectedItem;
+			var currentIndex : int = _panel.tree.getItemIndex(current);
+			_panel.tree.expandItem(current, true);
+			openElement(current, function ():void {
+				setTimeout(function ():void {
+					_panel.tree.selectedIndex = currentIndex;
+					current = _panel.tree.selectedItem || _panel.tree.openItems[0];
+					var parentXML:XML = current.node.(@name == "parent")[0];
+					var parentIndexInTree:int = _panel.tree.getItemIndex(parentXML);
+					_panel.tree.verticalScrollPosition = parentIndexInTree;
+					_panel.tree.selectedItem = parentXML;
+					selectItem(parentXML);
+				}, 1);
+			});
 		}
 
 		
@@ -282,6 +308,10 @@ package controllers.panels
 					_panel.tree.validateNow();
 					_panel.tree.verticalScrollPosition = treeVPOS;
 					_panel.tree.horizontalScrollPosition = treeHPOS;
+					if (onObjectGotten) {
+						onObjectGotten();
+						onObjectGotten = null;
+					}
 					break;
 
 				case MonsterDebuggerConstants.COMMAND_START_HIGHLIGHT:
@@ -319,39 +349,49 @@ package controllers.panels
 		{
 			// Get the object
 			if (event.item.@target != null) {
-				_send({command:MonsterDebuggerConstants.COMMAND_GET_OBJECT, target:String(event.item.@target)});
+				openElement(event.item);
 			}
+		}
+
+		private function openElement(item:Object, callback:Function = null):void {
+			onObjectGotten = callback;
+			_send({command: MonsterDebuggerConstants.COMMAND_GET_OBJECT, target: String(item.@target)});
 		}
 
 
 		/**
 		 * Tree item clicked
 		 */
-		public function treeClick(event:MouseEvent):void
-		{
+		public function treeClick(event:MouseEvent):void {
+			var selectedItem:XML = event.currentTarget.selectedItem;
+			if (selectedItem != null) {
+				selectItem(selectedItem);
+			}
+		}
+
+		private function selectItem(selectedItem:XML):void {
 			var objType:String;
 			var objTarget:String;
-
-			if (event.currentTarget.selectedItem != null) {
-
 				// Clear old values
 				dispatchEvent(new PanelEvent(PanelEvent.CLEAR_PROPERTIES));
 
 				// Save the type and target
-				objType = event.currentTarget.selectedItem.@type;
-				objTarget = event.currentTarget.selectedItem.@target;
+			objType = selectedItem.@type;
+			objTarget = selectedItem.@target;
 
 				// Only get the info from objects
 				if (objType != MonsterDebuggerConstants.TYPE_WARNING && objType != MonsterDebuggerConstants.TYPE_STRING && objType != MonsterDebuggerConstants.TYPE_BOOLEAN && objType != MonsterDebuggerConstants.TYPE_NUMBER && objType != MonsterDebuggerConstants.TYPE_INT && objType != MonsterDebuggerConstants.TYPE_UINT && objType != MonsterDebuggerConstants.TYPE_FUNCTION) {
+				selectItemObject(objTarget);
+			}
+		}
 
+		private function selectItemObject(objTarget:String):void {
 					// Send commands
 					_send({command:MonsterDebuggerConstants.COMMAND_HIGHLIGHT, target:objTarget});
 					_send({command:MonsterDebuggerConstants.COMMAND_GET_PROPERTIES, target:objTarget});
 					_send({command:MonsterDebuggerConstants.COMMAND_GET_FUNCTIONS, target:objTarget});
 					_send({command:MonsterDebuggerConstants.COMMAND_GET_PREVIEW, target:objTarget});
 				}
-			}
-		}
 
 
 		public function onRefresh(evt:ContextMenuEvent = null):void
