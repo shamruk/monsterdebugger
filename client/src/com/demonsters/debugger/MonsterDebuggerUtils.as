@@ -499,7 +499,7 @@ package com.demonsters.debugger
 		}
 
 		private static function getRecursiveProperty(displayObject : DisplayObject, key : String) : Array {
-			var collection : Array = displayObject is Stage ? [] : getRecursiveProperty(displayObject.parent, key);
+			var collection : Array = !displayObject || displayObject is Stage ? [] : getRecursiveProperty(displayObject.parent, key);
 			collection.unshift(getPropertySafe(displayObject, key, "?"));
 			return collection;
 		}
